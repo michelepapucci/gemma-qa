@@ -73,10 +73,10 @@ def sample_responses_and_evaluate(dataset, model, sae, tokenizer_gemma, truth_ju
                 output_dict[pred_truth_label][feature] += 1
         judge_predictions.append((i, pred_truth_label))
 
-    with open(f"output_{target_layer}.json", "w") as output_json:
+    with open(f"data/activations/output_{target_layer}.json", "w") as output_json:
         output_json.write(json.dumps(output_dict))
     
-    predictions_out_path = f"gemma_predictions_truthfulQA_{target_layer}.csv"
+    predictions_out_path = f"data/predictions/gemma_predictions_truthfulQA_{target_layer}.csv"
     write_model_predictions(predictions_out_path, judge_predictions)
     output_json.close()
 
