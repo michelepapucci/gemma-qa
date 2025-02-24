@@ -8,6 +8,7 @@ import argparse
 import torch
 import json
 import csv
+import os
 
 device_gemma = "cuda:0"
 torch.set_float32_matmul_precision('high')
@@ -31,10 +32,10 @@ def load_model_predictions(src_path):
         csv_reader = csv.reader(src_file)
         next(csv_reader) # skip the header
         for row in csv_reader:
-            predictions_dict[row[0]] = row[1]
+            predictions_dict[int(row[0])] = row[1]
     return predictions_dict
 
-def sample_responses_and_evaluate(dataset, predictions_dict, model, sae, tokenizer_gemma, target_layer):
+def sample_responses_and_evaluate(dataset, predictions_dict, model, sae, tokenizer_gemma, target_layer, output_dir):
     judge_predictions = []
     output_dict = {"yes":{}, "no":{}}
 
@@ -62,7 +63,7 @@ def sample_responses_and_evaluate(dataset, predictions_dict, model, sae, tokeniz
                 output_dict[pred_truth_label][feature] += 1
         judge_predictions.append((i, pred_truth_label))
 
-    with open(f"data/activations/output_{target_layer}.json", "w") as output_json:
+    with open(os.path.join(output_dir, f"output_{target_layer}.json"), "w") as output_json:
         output_json.write(json.dumps(output_dict))
     
     output_json.close()
@@ -72,7 +73,9 @@ def main():
     parser.add_argument('-l', '--target_layer', type=int, required=True)
     args = parser.parse_args()
 
-    predictions_path = 'data/predictions/gemma_predictions_truthfulQA.csv'
+    predictions_path = 'data/predictions/gemma_predictions_truthfulQA_info_judge.csv'
+    output_dir = 'data/activations/info_judge/'
+
     predictions_dict = load_model_predictions(predictions_path)
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -92,7 +95,7 @@ def main():
     
     dataset = load_dataset("domenicrosati/TruthfulQA")
     
-    sample_responses_and_evaluate(dataset, predictions_dict, model, sae, tokenizer_gemma, args.target_layer)
+    sample_responses_and_evaluate(dataset, predictions_dict, model, sae, tokenizer_gemma, args.target_layer, output_dir)
 
 if __name__ == "__main__":
     main()

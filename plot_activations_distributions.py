@@ -37,14 +37,15 @@ def main():
     fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, num_rows * 4)) 
     axes = axes.flatten()
 
+    predictions_path = f'data/predictions/gemma_predictions_truthfulQA_info_judge.csv' 
+    predictions_count = count_classes_predictions(predictions_path)
+
     for layer in range(num_components):
-        activations_path = f'data/activations/output_{layer}.json'
-        predictions_path = f'data/predictions/gemma_predictions_truthfulQA_{layer}.csv' 
+        activations_path = f'data/activations/info_judge/output_{layer}.json'
         
         if not os.path.exists(activations_path):
             continue
 
-        predictions_count = count_classes_predictions(predictions_path)
         activations = load_json(activations_path)
 
         yes_activations = vectorize_and_normalize_label_activations('yes', activations, predictions_count, num_components)
@@ -56,7 +57,7 @@ def main():
     
     plt.tight_layout()
     plt.show()
-    plt.savefig('data/results/activated_features.png', dpi=300, bbox_inches="tight")
+    plt.savefig('data/results/activated_features_info_judge.png', dpi=300, bbox_inches="tight")
 
 
 if __name__ == '__main__':

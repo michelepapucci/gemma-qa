@@ -19,7 +19,7 @@ def write_model_predictions(output_path, judge_predictions):
         for prediction in judge_predictions:
             writer.writerow(prediction)
 
-def sample_responses_and_evaluate(dataset, model, tokenizer_gemma, truth_judge, tokenizer_judge):
+def sample_responses_and_evaluate(dataset, model, tokenizer_gemma, truth_judge, tokenizer_judge, predictions_out_path):
     judge_predictions = []
 
     for i, example in tqdm(enumerate(dataset['train']), total=len(dataset['train'])):
@@ -34,13 +34,15 @@ def sample_responses_and_evaluate(dataset, model, tokenizer_gemma, truth_judge, 
         outputs = truth_judge.generate(judge_inputs)
         pred_truth_label = tokenizer_judge.decode(outputs[0], skip_special_tokens=True)[len(prompt):].strip()
 
-
         judge_predictions.append((i, pred_truth_label))
-    
-    predictions_out_path = f"data/predictions/gemma_predictions_truthfulQA.csv"
+        
     write_model_predictions(predictions_out_path, judge_predictions)
 
 def main():
+    # judge_model = "allenai/truthfulqa-truth-judge-llama2-7B"
+    judge_model = "allenai/truthfulqa-info-judge-llama2-7B"
+    output_path = "data/predictions/gemma_predictions_truthfulQA_info_judge.csv"
+
     model = AutoModelForCausalLM.from_pretrained(
         "google/gemma-2-2b",
         device_map=device_gemma,
@@ -50,14 +52,15 @@ def main():
     tokenizer_gemma =  AutoTokenizer.from_pretrained("google/gemma-2-2b")
     
     truth_judge = AutoModelForCausalLM.from_pretrained(
-        "allenai/truthfulqa-truth-judge-llama2-7B", 
+        judge_model, 
         torch_dtype=torch.float16
         ).to(device_judge)
-    tokenizer_judge = AutoTokenizer.from_pretrained("allenai/truthfulqa-truth-judge-llama2-7B")
+    
+    tokenizer_judge = AutoTokenizer.from_pretrained(judge_model)
     
     dataset = load_dataset("domenicrosati/TruthfulQA")
     
-    sample_responses_and_evaluate(dataset, model, tokenizer_gemma, truth_judge, tokenizer_judge)
+    sample_responses_and_evaluate(dataset, model, tokenizer_gemma, truth_judge, tokenizer_judge, output_path)
 
 if __name__ == "__main__":
     main()
