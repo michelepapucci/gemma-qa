@@ -30,7 +30,7 @@ def gather_residual_activations(model, target_layer, inputs):
 def write_model_predictions(output_path, judge_predictions):
     with open(output_path, "w") as output_csv: 
         writer = csv.writer(output_csv)
-        writer.writerow("index, prediction")
+        writer.writerow(["index, prediction"])
         for prediction in judge_predictions:
             writer.writerow(prediction)
 
